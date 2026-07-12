@@ -1,8 +1,8 @@
 name: "Publish to FlatPark"
+# Marketplace caps description at 125 characters.
 description: >-
-  Publish your GitHub release as a Flatpak — notify FlatPark on release so
-  your Linux users get the Flatpak update the same day. No tokens, no build
-  config, zero maintenance.
+  Publish your GitHub release as a Flatpak on FlatPark — same-day updates
+  for your Linux users. No tokens, zero maintenance.
 author: "FlatPark"
 branding:
   icon: upload-cloud

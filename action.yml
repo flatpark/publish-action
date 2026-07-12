@@ -1,0 +1,55 @@
+name: "Publish to FlatPark"
+description: >-
+  Publish your GitHub release as a Flatpak — notify FlatPark on release so
+  your Linux users get the Flatpak update the same day. No tokens, no build
+  config, zero maintenance.
+author: "FlatPark"
+branding:
+  icon: upload-cloud
+  color: blue
+
+inputs:
+  app-id:
+    description: >-
+      Your app's Flatpak application id on FlatPark
+      (e.g. com.example.MyApp). It must already be listed at flatpark.org.
+    required: true
+  tag:
+    description: >-
+      Release tag to publish. Defaults to the tag of the release that
+      triggered the workflow.
+    required: false
+    default: ""
+  endpoint:
+    description: FlatPark release webhook URL.
+    required: false
+    default: "https://hooks.flatpark.org/release"
+
+runs:
+  using: composite
+  steps:
+    - name: Notify FlatPark
+      shell: bash
+      env:
+        APP_ID: ${{ inputs.app-id }}
+        INPUT_TAG: ${{ inputs.tag }}
+        RELEASE_TAG: ${{ github.event.release.tag_name }}
+        ENDPOINT: ${{ inputs.endpoint }}
+      run: |
+        set -euo pipefail
+        tag="${INPUT_TAG:-${RELEASE_TAG:-$GITHUB_REF_NAME}}"
+        [ -n "$tag" ] || { echo "::error::could not determine release tag"; exit 1; }
+
+        payload="$(jq -n --arg a "$APP_ID" --arg t "$tag" --arg r "$GITHUB_REPOSITORY" \
+          '{app_id: $a, tag: $t, repository: $r}')"
+
+        echo "notifying FlatPark: $APP_ID $tag"
+        # --retry covers transient failures (timeouts, 429, 5xx) but not hard
+        # 4xx, so a misconfigured app-id fails fast with the server's message.
+        if ! resp="$(curl -sS --fail-with-body --retry 5 --max-time 30 \
+              -H 'content-type: application/json' \
+              -d "$payload" "$ENDPOINT")"; then
+          echo "::error::FlatPark rejected the release: ${resp:-no response}"
+          exit 1
+        fi
+        echo "FlatPark accepted: $resp"

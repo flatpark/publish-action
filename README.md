@@ -16,6 +16,8 @@ on:
 jobs:
   flatpak:
     runs-on: ubuntu-latest
+    # A FlatPark hiccup should never fail your release.
+    continue-on-error: true
     steps:
       - uses: flatpark/publish-action@v1
         with:

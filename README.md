@@ -24,10 +24,17 @@ jobs:
           app-id: com.example.MyApp
 ```
 
-That's it. Within minutes FlatPark re-resolves your latest release, opens an
-update PR, and after review the new version is live on the
-[FlatPark Flatpak repository](https://flatpark.org/setup) — where
+That's it, and it leaves you nothing to chase. Within minutes FlatPark
+re-resolves your latest release, unpacks the new artifact the way an install
+does, and — when that works — merges and publishes it without waiting for a
+maintainer. The new version is live on the
+[FlatPark Flatpak repository](https://flatpark.org/setup), where
 `flatpak update` delivers it to every installed user.
+
+The one case that stops there is an artifact that no longer unpacks — usually
+a release that was repackaged, a renamed launcher or a relocated binary. Then
+the version already published stays up, untouched, and someone at FlatPark
+picks it up by hand.
 
 ## Requirements
 
@@ -58,8 +65,8 @@ credentials. Your workflow never holds a FlatPark token, and nobody can use
 this endpoint to publish releases for a repository they don't control.
 
 Without this action your app still updates — FlatPark polls upstream releases
-daily. This action turns that poll into a push, so updates land in minutes
-instead of up to a day later.
+daily and ships them the same automatic way. This action turns that poll into
+a push, so updates land in minutes instead of up to a day later.
 
 ## Why distribute on Flatpak at all?
 

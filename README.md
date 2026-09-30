@@ -36,6 +36,35 @@ a release that was repackaged, a renamed launcher or a relocated binary. Then
 the version already published stays up, untouched, and someone at FlatPark
 picks it up by hand.
 
+## If a workflow creates your releases
+
+GitHub doesn't start new workflow runs for events caused by `GITHUB_TOKEN`.
+So if your release is created or published by a workflow (for example with
+`tauri-action` or `softprops/action-gh-release` on the default token), the
+`on: release` workflow above never runs, and nothing reports an error. In
+that case add the job to the workflow that creates the release, after the
+step that publishes it, and pass the tag explicitly:
+
+```yaml
+# .github/workflows/build.yml — the workflow that creates the release
+jobs:
+  release:
+    # ... builds and publishes the GitHub release ...
+
+  flatpak:
+    needs: release
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: flatpark/publish-action@v1
+        with:
+          app-id: com.example.MyApp
+          tag: ${{ github.ref_name }}  # the release tag, if the run was started by a tag push
+```
+
+The release has to be **published** (not a draft) by the time this job runs.
+FlatPark only accepts tags that are live releases.
+
 ## Requirements
 
 Your app must already be listed on FlatPark. Not listed yet?
@@ -48,7 +77,7 @@ that ships Linux release binaries usually takes a day.
 | Input      | Required | Default                              | Description                                              |
 |------------|----------|--------------------------------------|----------------------------------------------------------|
 | `app-id`   | yes      | —                                    | Your Flatpak application id on FlatPark (e.g. `com.example.MyApp`) |
-| `tag`      | no       | tag of the triggering release        | Release tag to publish                                   |
+| `tag`      | no       | tag of the triggering release        | Release tag to publish; set it outside `on: release`     |
 | `endpoint` | no       | `https://hooks.flatpark.org/release` | FlatPark release webhook                                 |
 
 ## How it works (and why it needs no secrets)
